@@ -1,0 +1,136 @@
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body {
+	text-align:center;
+	color:#fff; 
+	position:absolute; 
+	top:0; left:0; right:0; bottom:0;
+    margin: 0 auto;
+    max-width: 800px;
+	background:linear-gradient(to bottom, #627d4d 0%,#1f3b08 100%);
+}
+.container {
+    border: 2px solid #dedede;
+    background-color: #f1f1f1;
+	text-align:left;
+    border-radius: 5px;
+    padding: 10px;
+    margin: 10px 0;
+}
+
+.darker {
+    border-color: #ccc;
+	text-align:right;
+    background-color: #ddd;
+}
+messages {
+	text-align:center;
+	color:#fff; 
+	position:absolute; 
+	top:0; left:0; right:0; bottom:0;
+    margin: 0 auto;
+    max-width: 800px;
+	background:linear-gradient(to bottom, #627d4d 0%,#1f3b08 100%);
+}
+</style>
+<script>
+var webSocket;
+var count = 0;
+var name;
+function addLog(s) { 
+  var log = document.getElementById('log');
+  log.value = s + "\n---------------------------------\n" + log.value; 
+}
+function connect()  {
+  webSocket = new WebSocket('ws://127.0.0.1:28563');
+  webSocket.onopen = function() {
+	var ind = document.location.href.indexOf('?');
+	if (ind == -1) {
+		document.location.href = "login.html";
+	}
+	var param = document.location.href.substring(document.location.href.indexOf('?')+1);
+	webSocket.send("connect " +  document.location.href.substring(document.location.href.indexOf('?')+1));	
+	name = param;
+	let div = document.createElement('div');
+	div.innerHTML = "<p style=\"color:black;\" id=\"val\">Количество пользователей: " + count +"</p>";
+	document.getElementById('coun').append(div);
+    addLog("Соединение с веб-сокет сервером установлено");
+  };
+  webSocket.onclose = function() {
+    addLog("Соединение с веб-сокет сервером разорвано");
+  };
+  webSocket.onerror = function(error) {
+    addLog("Ошибка " + error.message);
+  };
+  webSocket.onmessage = function(event) {
+		if (event.data == "Error") {
+			document.location.href = "login.html";
+			return;
+		}		
+		let words = event.data.split(" ");
+		if (words[0] == "mes") {
+			let s = words[4];
+			for (let i = 5; i < words.length; i++) {
+				s += words[i];
+			}
+			let div = document.createElement('div');
+			if (words[1] == "other")
+				div.className = "container";
+			else
+				div.className = "container darker";
+			div.innerHTML = "<p style=\"color:black;\">" + words[2] +"</p>" + "<p style=\"color:grey;\">" + s +"</p>" + "<p style=\"color:grey;\">" + words[3] +"</p>";
+			document.getElementById('messages').append(div);
+		}
+		if (words[0] == "dis") {
+			var d = document.getElementById(words[1]);
+			if (d != null) {
+				d.parentNode.removeChild(d);
+				count--;			
+				document.getElementById('coun').value = "Количество пользователей: " + count;
+			}
+		}
+		if (words[0] == "con") {
+			count++;		
+			let el = document.getElementById('val');
+			el.innerHTML = "<p>Количество пользователей: " + count + "</p>";
+			let div2 = document.createElement('div');
+			div2.innerHTML = "<p style=\"color:black;\" id=\"" + words[1] + "\">" + words[1] +"</p>";
+			document.getElementById('coun').append(div2);
+		}
+		
+      addLog("Получен ответ: " + event.data);
+  };
+}
+function send() {
+    if (typeof webSocket == 'undefined') { alert('Вы не подключены к веб-сокет серверу'); return; }
+    var data = "mes " + document.getElementById('query').value;
+    webSocket.send(data);
+    addLog("Отправлен запрос: " + data);
+	document.getElementById('query').value = "";
+};
+</script>
+<title>
+Чат
+</title>
+</head>
+<body onload="connect();">
+<h1 style='margin-top:30px;'>Список подключенных пользователей</h1>
+<div id='coun'> </div>
+<form style="display:inline-block">
+<h2 id = 'messages'>Запрос:</h2>
+<textarea rows="10" cols="100" style='padding:5px;' id='query'></textarea><br>
+<input type=button id='sen' value="Отправить" style='width:200px; height:80px;' onclick="send();"><br><br>
+<script>
+function ent(e){     
+    if (e.key == "Enter") {
+		send();
+	}
+} 
+addEventListener("keydown", ent);
+</script>
+<h2>Ответы:</h2>
+<textarea rows="10" cols="100" style='padding:5px;' id='log'></textarea>
+</body>
+</html>

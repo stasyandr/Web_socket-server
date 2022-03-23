@@ -1,0 +1,71 @@
+<html>
+<head>
+<meta charset="utf-8">
+<script>
+var webSocket;
+/*function addLog(s) { 
+  var log = document.getElementById('log');
+  log.value = s + "\n---------------------------------\n" + log.value; 
+}*/
+function connect()  {
+  webSocket = new WebSocket('ws://127.0.0.1:28563');
+  webSocket.onopen = function() {
+    //addLog("Соединение с веб-сокет сервером установлено");
+  };
+  webSocket.onclose = function() {	
+    //addLog("Соединение с веб-сокет сервером разорвано");
+  };
+  webSocket.onerror = function(error) {
+    //addLog("Ошибка " + error.message);
+  };
+  webSocket.onmessage = function(event) {
+	if (event.data == "PASS") {
+		document.location.href = "chat.html?" + document.getElementById('login').value;
+	}
+	var d = document.getElementById("id1");
+	if (d != null)
+		d.parentNode.removeChild(d);
+	let div = document.createElement('div');
+	div.innerHTML = "<p style=\"color:red;\">" + event.data +"</p>";
+	div.id = "id1";
+	document.getElementById('but').before(div);
+    //addLog("Получен ответ: " + event.data);
+  };
+}
+function log() {
+	var l = document.getElementById('login').value;
+	var p = document.getElementById('password').value;
+	if (l.length == 0 || p.length == 0) {
+		var d = document.getElementById("id1");
+		if (d != null)
+			d.parentNode.removeChild(d);
+		let div = document.createElement('div');
+		div.innerHTML = "<p style=\"color:red;\">" + "Not all fields are fill" +"</p>";
+		div.id = "id1";
+		document.getElementById('but').before(div);
+	}
+	var data = "log " + l + ' ' + p;
+    webSocket.send(data);
+}
+;
+</script>
+<title>
+Авторизация
+</title>
+</head>
+<body style="background:linear-gradient(to bottom, #627d4d 0%,#1f3b08 100%);text-align:center; color:#fff; margin: 0; position:absolute; top:0; left:0; right:0; bottom:0" onload="connect();">
+<h1>Авторизация</h1>
+Логин <br> <input type="text" id="login"><br> <br>
+Пароль: <br> <INPUT SIZE=10 TYPE=password id="password">  </pre> 
+<script>
+function ent(e){     
+    if (e.key == "Enter") {
+		send();
+	}
+} 
+addEventListener("keydown", ent);
+</script>
+<br> <br>
+<input type=button value="Войти" style='width:200px; height:80px;' id="but" onclick="log();"><br><br>
+</body>
+</html>

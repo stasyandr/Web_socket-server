@@ -1,0 +1,74 @@
+<html>
+<head>
+<meta charset="utf-8">
+<script>
+var webSocket;
+/*function addLog(s) { 
+  var log = document.getElementById('log');
+  log.value = s + "\n---------------------------------\n" + log.value; 
+}*/
+function connect()  {
+  webSocket = new WebSocket('ws://127.0.0.1:28563');
+  webSocket.onopen = function() {
+    //addLog("Соединение с веб-сокет сервером установлено");
+  };
+  webSocket.onclose = function() {
+    //addLog("Соединение с веб-сокет сервером разорвано");
+  };
+  webSocket.onerror = function(error) {
+    //addLog("Ошибка " + error.message);
+  };
+  webSocket.onmessage = function(event) {
+      //addLog("Получен ответ: " + event.data);
+	  if (event.data.split(" ").length == 3)
+		document.location.href = "login.html";		
+  };
+}
+function send() {
+    if (typeof webSocket == 'undefined') { alert('Вы не подключены к веб-сокет серверу'); return; }
+    var data = document.getElementById('query').value;
+    webSocket.send(data);
+    //addLog("Отправлен запрос: "+data);
+}
+function reg() {
+	if (document.getElementById('password1').value.length == 0 || document.getElementById('password2').value.length == 0 
+		|| document.getElementById('login').value.length == 0) {
+		var d = document.getElementById("id1");
+		if (d != null)
+			d.parentNode.removeChild(d);
+		let div = document.createElement('div');
+		div.innerHTML = "<p style=\"color:red;\">" + "Not all fields are fill" +"</p>";
+		div.id = "id1";
+		document.getElementById('but').before(div);
+	}    
+	else if (document.getElementById('password1').value != document.getElementById('password2').value) {
+		var d = document.getElementById("id1");
+		if (d != null)
+			d.parentNode.removeChild(d);
+		let div = document.createElement('div');
+		div.innerHTML = "<p style=\"color:red;\">" + "Passwords are not equal" +"</p>";
+		div.id = "id1";
+		document.getElementById('but').before(div);
+	}
+	else {
+		var data = "reg " + document.getElementById('login').value + ' ' + document.getElementById('password1').value;
+		webSocket.send(data);
+		//addLog("Отправлен запрос: "+data);
+	}
+}
+;
+</script>
+<title>
+Регистрация
+</title>
+</head>
+<body style="background:linear-gradient(to bottom, #627d4d 0%,#1f3b08 100%);text-align:center; color:#fff; margin: 0; position:absolute; top:0; left:0; right:0; bottom:0" onload="connect();">
+<h1>Регистрация</h1>
+Логин <br> <input type="text" id="login"><br> <br>
+Пароль: <br> <INPUT SIZE=10 TYPE=password id="password1">
+<br> <br>
+Повторите пароль: <br> <INPUT SIZE=10 TYPE=password id="password2">
+<br> <br>
+<input type=button value="Зарегистрироваться" style='width:200px; height:80px;' id='but' onclick="reg();"><br><br>
+</body>
+</html>
